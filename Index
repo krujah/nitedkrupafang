@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบนิเทศภายในโรงเรียนบ้านป่าฝาง</title>
+<style>
+  :root {
+    --primary: #2e7d32;
+    --primary-dark: #1b5e20;
+    --accent: #ff9800;
+    --danger: #e53935;
+    --bg: #f4f6f5;
+    --card: #ffffff;
+    --text: #263238;
+    --muted: #78909c;
+    --border: #e0e4e2;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Sarabun', 'TH Sarabun New', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+  }
+  #app { min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .topbar {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topbar h1 { font-size: 18px; margin: 0; font-weight: 700; }
+  .topbar .sub { font-size: 12px; opacity: 0.85; }
+  .userbox { font-size: 13px; display: flex; align-items: center; gap: 10px; }
+  .btn-logout {
+    background: rgba(255,255,255,0.18); border: none; color: #fff;
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+
+  /* Nav */
+  .nav {
+    background: #fff; display: flex; gap: 4px; padding: 6px 12px;
+    border-bottom: 1px solid var(--border); overflow-x: auto;
+  }
+  .nav button {
+    background: none; border: none; padding: 10px 16px; cursor: pointer;
+    font-size: 14px; color: var(--muted); border-bottom: 3px solid transparent;
+    white-space: nowrap; font-family: inherit;
+  }
+  .nav button.active { color: var(--primary-dark); border-bottom-color: var(--primary); font-weight: 700; }
+
+  .content { flex: 1; padding: 18px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(4px);} to {opacity:1; transform:none;} }
+
+  /* Cards */
+  .card {
+    background: var(--card); border-radius: var(--radius); padding: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .card h2, .card h3 { margin-top: 0; }
+  .grid { display: grid; gap: 14px; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 800px) { .grid-4 { grid-template-columns: repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} }
+
+  .stat-card { text-align: center; padding: 16px; }
+  .stat-card .num { font-size: 30px; font-weight: 800; color: var(--primary-dark); }
+  .stat-card .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* Forms */
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit; background: #fcfcfc;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 180px; }
+
+  .btn {
+    display: inline-block; background: var(--primary); color: #fff; border: none;
+    padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+    font-family: inherit; margin-top: 14px;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn.secondary { background: #eceff1; color: var(--text); }
+  .btn.danger { background: var(--danger); }
+  .btn.warn { background: var(--accent); }
+  .btn.small { padding: 6px 12px; font-size: 12px; margin-top: 0; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; background: #fafafa; }
+  tr:hover td { background: #f9fbf9; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  }
+  .badge.pending { background: #fff3e0; color: #ef6c00; }
+  .badge.confirmed { background: #e3f2fd; color: #1565c0; }
+  .badge.rejected { background: #ffebee; color: #c62828; }
+  .badge.done { background: #e8f5e9; color: #2e7d32; }
+  .badge.pass { background: #e8f5e9; color: #2e7d32; }
+  .badge.review { background: #fff3e0; color: #ef6c00; }
+
+  .empty { text-align: center; color: var(--muted); padding: 30px; }
+
+  /* Login */
+  .login-wrap {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #2e7d32, #66bb6a);
+  }
+  .login-card {
+    background: #fff; padding: 34px 30px; border-radius: 16px; width: 100%; max-width: 360px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center;
+  }
+  .login-card h1 { font-size: 20px; color: var(--primary-dark); margin-bottom: 2px; }
+  .login-card .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .role-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .role-tabs button {
+    flex: 1; padding: 9px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fafafa; cursor: pointer; font-family: inherit; font-size: 13px;
+  }
+  .role-tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin: 10px 0; }
+  .msg.success { background: #e8f5e9; color: #2e7d32; }
+  .msg.error { background: #ffebee; color: #c62828; }
+
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent;
+    border-radius: 50%; display: inline-block; animation: spin 0.7s linear infinite; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .file-type-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .file-type-tabs button {
+    padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border); background: #fafafa;
+    cursor: pointer; font-family: inherit; font-size: 13px;
+  }
+  .file-type-tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  #calendarBox { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; font-size: 12px; }
+  .cal-day { background: #fafafa; border-radius: 6px; padding: 6px 4px; min-height: 44px; border: 1px solid var(--border); }
+  .cal-day .d { font-weight: 700; color: var(--muted); font-size: 11px; }
+  .cal-day .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; margin-top: 3px; }
+
+  .print-only { display: none; }
+
+  .report-letterhead {
+    text-align: center; border-bottom: 2px solid #263238; padding-bottom: 10px; margin-bottom: 16px;
+  }
+  .report-letterhead .emblem {
+    width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--primary-dark);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;
+    font-size: 22px; color: var(--primary-dark);
+  }
+  .report-letterhead .school { font-size: 16px; font-weight: 700; margin: 2px 0; }
+  .report-letterhead .office { font-size: 13px; color: var(--muted); margin: 0; }
+  .report-letterhead .title { font-size: 15px; font-weight: 700; margin: 10px 0 2px; }
+  .report-letterhead .meta { font-size: 13px; color: var(--muted); margin: 0; }
+
+  .signature-block {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; font-size: 13px; text-align: center;
+  }
+  .signature-block .line { border-top: 1px dotted #444; margin: 46px auto 6px; width: 85%; }
+  .signature-block .role { color: var(--muted); }
+
+  .report-meta-form { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .report-meta-form > div { flex: 1; min-width: 160px; }
+
+  .report-photos {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; page-break-inside: avoid;
+  }
+  .report-photos figure { margin: 0; }
+  .report-photos img {
+    width: 100%; height: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); display: block;
+  }
+  .report-photos figcaption { font-size: 11px; color: var(--muted); text-align: center; margin-top: 3px; }
+
+  .criteria-section { margin-top: 10px; }
+  .criteria-section h4 { font-size: 14px; margin: 14px 0 8px; color: var(--primary-dark); }
+  .criteria-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .criteria-item .txt { flex: 1; }
+  .score-radios { display: flex; gap: 6px; }
+  .score-radios label {
+    display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; margin: 0;
+    color: var(--muted);
+  }
+  .score-radios input { display: none; }
+  .score-radios label.active-score { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .eval-print-header { text-align: center; margin-bottom: 12px; }
+  .eval-print-header .doctitle { font-size: 15px; font-weight: 700; margin: 0 0 2px; }
+  .eval-print-fields { font-size: 13px; margin-bottom: 10px; line-height: 1.8; }
+  .eval-print-fields .r { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+  .eval-score-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
+  .eval-score-table th, .eval-score-table td { border: 1px solid #999; padding: 5px 6px; text-align: center; }
+  .eval-score-table th:first-child, .eval-score-table td:first-child { text-align: left; }
+  .eval-score-table td.sel { background: #e8f5e9; font-weight: 700; }
+  .eval-score-table tr.subtotal td { background: #f5f5f5; font-weight: 700; text-align: right; }
+  .eval-score-table tr.subtotal td:first-child { text-align: right; }
+  .quality-band-table { width: 60%; border-collapse: collapse; font-size: 12px; margin: 10px 0 14px; }
+  .quality-band-table th, .quality-band-table td { border: 1px solid #999; padding: 4px 8px; text-align: center; }
+  .quality-band-table tr.current td { background: #fff3e0; font-weight: 700; }
+  .eval-suggestion-box { border: 1px solid #999; border-radius: 4px; padding: 10px; font-size: 13px; min-height: 50px; margin-bottom: 6px; }
+
+  @media print {
+    .nav, .topbar, .btn, .no-print { display: none !important; }
+    .print-only { display: block; }
+    body { background: #fff; }
+    @page { margin: 1.5cm; }
+  }
+</style>
+
+</head>
+<body>
+
+  <!-- ===================== LOGIN ===================== -->
+  <div class="login-wrap" id="loginScreen">
+    <div class="login-card">
+      <h1 id="schoolNameLabel">โรงเรียนบ้านป่าฝาง</h1>
+      <div class="sub">ระบบนิเทศภายในโรงเรียน · สพป.สตูล</div>
+
+      <div id="adminLoginBox" style="margin-top:16px;">
+        <label>รหัสผ่านผู้ดูแลระบบ</label>
+        <input type="password" id="adminPwdInput" placeholder="รหัสผ่าน">
+        <button class="btn" id="adminLoginBtn" style="width:100%;" onclick="loginAdmin()">เข้าสู่ระบบ</button>
+      </div>
+
+      <div class="msg" id="loginMsg" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="app" style="display:none;">
+    <div class="topbar">
+      <div>
+        <h1 id="appTitle">📋 ระบบนิเทศภายในโรงเรียน</h1>
+        <div class="sub">โรงเรียนบ้านป่าฝาง · สพป.สตูล</div>
+      </div>
+      <div class="userbox">
+        <span id="userLabel"></span>
+        <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button id="nav-dashboard" onclick="goto('dashboard')">📊 Dashboard</button>
+      <button id="nav-booking" onclick="goto('booking')">📅 จองวันนิเทศ</button>
+      <button id="nav-files" onclick="goto('files')">📤 ส่งไฟล์งาน</button>
+      <button id="nav-evaluation" onclick="goto('evaluation')">📝 ประเมินผล</button>
+      <button id="nav-admin" onclick="goto('admin')">⚙️ ผู้ดูแลระบบ</button>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div class="view" id="view-dashboard">
+        <div id="dashboardBox"><div class="empty">กำลังโหลดข้อมูล...</div></div>
+      </div>
+
+      <!-- ============ BOOKING ============ -->
+      <div class="view" id="view-booking">
+        <div class="card">
+          <h2>📅 จองวันนิเทศ</h2>
+          <div class="row">
+            <div>
+              <label>ชื่อ-สกุล ครูผู้สอน</label>
+              <input type="text" id="bkTeacherName">
+            </div>
+            <div>
+              <label>กลุ่มสาระการเรียนรู้</label>
+              <select id="bkDepartment"></select>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>วันที่นิเทศ</label>
+              <input type="date" id="bkDate">
+            </div>
+            <div>
+              <label>คาบที่</label>
+              <select id="bkPeriod"></select>
+            </div>
+            <div>
+              <label>ช่วงเวลา (เช่น 09.00-10.00 น.)</label>
+              <input type="text" id="bkTime" placeholder="09.00-10.00 น.">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>ชื่อวิชา</label>
+              <input type="text" id="bkSubjectName">
+            </div>
+            <div>
+              <label>รหัสวิชา</label>
+              <input type="text" id="bkSubjectCode">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>ระดับชั้น</label>
+              <select id="bkClassLevel"></select>
+            </div>
+            <div>
+              <label>ห้องเรียน</label>
+              <input type="text" id="bkRoom" placeholder="เช่น ป.6/1">
+            </div>
+          </div>
+          <button class="btn" id="bookingSubmitBtn" onclick="submitBooking()">📌 จองวันนิเทศ</button>
+          <div class="msg" id="bookingMsg" style="display:none;"></div>
+        </div>
+
+        <div class="card">
+          <h3>รายการจองทั้งหมด</h3>
+          <div id="myBookingList"><div class="empty">กำลังโหลด...</div></div>
+        </div>
+      </div>
+
+      <!-- ============ FILES ============ -->
+      <div class="view" id="view-files">
+        <div class="card">
+          <h2>📤 ส่งไฟล์งาน</h2>
+          <div class="file-type-tabs">
+            <button id="ftab-แผนการสอน" class="active" onclick="selectFileType('แผนการสอน')">📄 แผนการสอน</button>
+            <button id="ftab-สื่อการสอน" onclick="selectFileType('สื่อการสอน')">🖼️ สื่อการสอน</button>
+            <button id="ftab-ภาพกิจกรรม" onclick="selectFileType('ภาพกิจกรรม')">📷 ภาพกิจกรรม</button>
+            <button id="ftab-คลิปวิดีโอ" onclick="selectFileType('คลิปวิดีโอ')">🎬 คลิปวิดีโอ</button>
+          </div>
+
+          <label>ชื่อ-สกุล ครูผู้สอน</label>
+          <input type="text" id="flTeacherName">
+
+          <div id="flFileBox">
+            <label>เลือกไฟล์ (PDF / Word / รูปภาพ / PPT)</label>
+            <input type="file" id="flFileInput">
+          </div>
+          <div id="flLinkBox" style="display:none;">
+            <label>ลิงก์ YouTube / Google Drive</label>
+            <input type="text" id="flLinkInput" placeholder="https://...">
+          </div>
+
+          <label>หมายเหตุ (ถ้ามี)</label>
+          <textarea id="flNote"></textarea>
+
+          <button class="btn" id="fileSubmitBtn" onclick="submitFile()">📤 ส่งไฟล์งาน</button>
+          <div class="msg" id="fileMsg" style="display:none;"></div>
+        </div>
+
+        <div class="card">
+          <h3>ไฟล์งานที่ส่งแล้ว</h3>
+          <div id="myFileList"><div class="empty">กำลังโหลด...</div></div>
+        </div>
+      </div>
+
+      <!-- ============ EVALUATION (admin/supervisor) ============ -->
+      <div class="view" id="view-evaluation">
+        <div class="card no-print">
+          <h2>📝 แบบนิเทศการสอน</h2>
+          <label>เลือกจากรายการจอง (ถ้ามี)</label>
+          <select id="evBookingId" onchange="onEvalBookingChange()"></select>
+
+          <div class="row">
+            <div>
+              <label>ชื่อ-สกุล ครูที่รับการนิเทศ</label>
+              <input type="text" id="evTeacherName">
+            </div>
+            <div>
+              <label>ตำแหน่ง / วิทยฐานะ</label>
+              <input type="text" id="evPosition" placeholder="เช่น ครูชำนาญการพิเศษ">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>รหัสวิชา</label>
+              <input type="text" id="evSubjectCode">
+            </div>
+            <div>
+              <label>ชื่อวิชา</label>
+              <input type="text" id="evSubjectName">
+            </div>
+            <div>
+              <label>ระดับชั้น</label>
+              <input type="text" id="evClassLevel">
+            </div>
+            <div>
+              <label>จำนวนนักเรียน (คน)</label>
+              <input type="number" id="evStudentCount" min="0">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>วันที่นิเทศ</label>
+              <input type="date" id="evDate">
+            </div>
+            <div>
+              <label>เวลา</label>
+              <input type="text" id="evTime" placeholder="09.00-10.00 น.">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>ชื่อผู้นิเทศ คนที่ 1</label>
+              <input type="text" id="evSup1">
+            </div>
+            <div>
+              <label>ชื่อผู้นิเทศ คนที่ 2</label>
+              <input type="text" id="evSup2">
+            </div>
+            <div>
+              <label>ชื่อผู้นิเทศ คนที่ 3</label>
+              <input type="text" id="evSup3">
+            </div>
+          </div>
+
+          <div id="evCriteriaBox" style="margin-top:16px;"></div>
+
+          <div class="grid grid-4" style="margin-top:14px;">
+            <div class="card stat-card"><div class="num" id="evScore1">0</div><div class="label">ด้าน 1 (เต็ม 28)</div></div>
+            <div class="card stat-card"><div class="num" id="evScore2">0</div><div class="label">ด้าน 2 (เต็ม 56)</div></div>
+            <div class="card stat-card"><div class="num" id="evScore3">0</div><div class="label">ด้าน 3 (เต็ม 16)</div></div>
+            <div class="card stat-card"><div class="num" id="evScoreTotal">0</div><div class="label" id="evQualityLabel">คะแนนรวม (เต็ม 100)</div></div>
+          </div>
+
+          <label style="margin-top:14px;">ข้อเสนอแนะของครูผู้นิเทศ</label>
+          <textarea id="evSuggestions"></textarea>
+
+          <button class="btn" id="evalSubmitBtn" onclick="submitEvaluation()">✅ บันทึกผลการนิเทศ</button>
+          <div class="msg" id="evalMsg" style="display:none;"></div>
+        </div>
+
+        <div class="card no-print">
+          <h3>ผลการนิเทศล่าสุด</h3>
+          <div id="evalList"><div class="empty">กำลังโหลด...</div></div>
+        </div>
+
+        <div id="evalDetailBox" class="print-only"></div>
+      </div>
+
+      <!-- ============ ADMIN ============ -->
+      <div class="view" id="view-admin">
+        <div class="card no-print">
+          <div class="role-tabs">
+            <button id="adminbtn-bookings" class="active" onclick="switchAdminTab('bookings')">📅 จัดการการจอง</button>
+            <button id="adminbtn-files" onclick="switchAdminTab('files')">📂 ตรวจผลงาน</button>
+            <button id="adminbtn-reports" onclick="switchAdminTab('reports')">🖨️ พิมพ์รายงาน</button>
+          </div>
+        </div>
+
+        <div class="card" id="admintab-bookings">
+          <h3>จัดการการจองนิเทศทั้งหมด</h3>
+          <div id="adminBookingList"><div class="empty">กำลังโหลด...</div></div>
+        </div>
+
+        <div class="card" id="admintab-files" style="display:none;">
+          <h3>ตรวจสอบไฟล์งานทั้งหมด</h3>
+          <div id="adminFileList"><div class="empty">กำลังโหลด...</div></div>
+        </div>
+
+        <div class="card" id="admintab-reports" style="display:none;">
+          <h3>รายงานและสถิติ</h3>
+          <div class="row no-print">
+            <div>
+              <label>รายงานรายบุคคล</label>
+              <select id="reportTeacherSelect" onchange="loadTeacherReport()"></select>
+            </div>
+            <div>
+              <label>รายงานกลุ่มสาระ</label>
+              <select id="reportDeptSelect" onchange="loadDepartmentReport()"></select>
+            </div>
+          </div>
+
+          <div class="report-meta-form no-print">
+            <div>
+              <label>ภาคเรียนที่ / ปีการศึกษา</label>
+              <input type="text" id="rmTerm" placeholder="1/2569" value="1/2569" oninput="refreshReportMeta()">
+            </div>
+            <div>
+              <label>ชื่อ-ตำแหน่ง ผู้บันทึกรายงาน</label>
+              <input type="text" id="rmRecorder" placeholder="เช่น นางนูรอีซะห์ หลังชาย ครูชำนาญการพิเศษ" oninput="refreshReportMeta()">
+            </div>
+            <div>
+              <label>ชื่อ-ตำแหน่ง ผู้รับรอง</label>
+              <input type="text" id="rmApprover" placeholder="เช่น ผู้อำนวยการโรงเรียนบ้านป่าฝาง" oninput="refreshReportMeta()">
+            </div>
+          </div>
+
+          <button class="btn secondary no-print" onclick="printReport()">🖨️ พิมพ์รายงาน</button>
+          <div id="reportBox" style="margin-top:16px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  // ⚙️⚙️⚙️ ตั้งค่าตรงนี้ก่อนใช้งาน — วาง URL เว็บแอป Apps Script ที่ deploy แล้ว (ลงท้ายด้วย /exec) ⚙️⚙️⚙️
+  var API_URL = 'วาง URL ของ Apps Script Web App ตรงนี้ (ลงท้ายด้วย /exec)';
+
+  // ============ API LAYER (JSONP สำหรับอ่าน, fetch POST สำหรับเขียน) ============
+  function apiGet(action, params) {
+    return new Promise(function (resolve, reject) {
+      var cbName = 'cb_' + action + '_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+      var timeout = setTimeout(function () {
+        cleanup();
+        reject(new Error('หมดเวลาเชื่อมต่อ — ตรวจสอบว่าตั้งค่า API_URL ถูกต้องและเว็บแอป Apps Script deploy สำเร็จแล้ว'));
+      }, 20000);
+
+      function cleanup() {
+        clearTimeout(timeout);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cbName] = function (data) {
+        cleanup();
+        if (data && data.error) { reject(new Error(data.error)); return; }
+        resolve(data);
+      };
+
+      var query = 'action=' + encodeURIComponent(action) + '&callback=' + cbName;
+      Object.keys(params || {}).forEach(function (k) {
+        query += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+      });
+
+      var script = document.createElement('script');
+      script.src = API_URL + '?' + query;
+      script.onerror = function () {
+        cleanup();
+        reject(new Error('เชื่อมต่อ API ไม่สำเร็จ — ตรวจสอบ API_URL และการตั้งค่า deploy (Who has access: Anyone)'));
+      };
+      document.body.appendChild(script);
+    });
+  }
+
+  function apiPost(action, data) {
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: action, data: data })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับผิดพลาด (HTTP ' + res.status + ')');
+        return res.json();
+      });
+  }
+
+  var STATE = {
+    user: null,        // { role: 'admin', name: '' }
+    config: null,
+    currentFileType: 'แผนการสอน',
+    lastReport: null
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!API_URL || API_URL.indexOf('วาง URL') !== -1) {
+      showLoginMsg('ยังไม่ได้ตั้งค่า API_URL ในไฟล์ index.html — เปิดไฟล์แก้ตัวแปร API_URL ที่ด้านบนของสคริปต์ก่อนใช้งาน', 'error');
+      return;
+    }
+    apiGet('getConfig').then(function (cfg) {
+      STATE.config = cfg;
+      document.getElementById('schoolNameLabel').innerText = cfg.schoolName;
+      fillSelect('bkDepartment', cfg.departments);
+      fillSelect('bkPeriod', cfg.periods);
+      fillSelect('bkClassLevel', cfg.classLevels);
+      renderCriteria(cfg.evalCriteria);
+    }).catch(function (err) {
+      showLoginMsg('เชื่อมต่อระบบไม่สำเร็จ: ' + err.message, 'error');
+    });
+  });
+
+  function fillSelect(id, arr) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">-- เลือก --</option>' + arr.map(function (v) {
+      return '<option value="' + v + '">' + v + '</option>';
+    }).join('');
+  }
+
+  // ============ LOGIN ============
+  function loginAdmin() {
+    var pwd = document.getElementById('adminPwdInput').value;
+    if (!pwd) { showLoginMsg('กรุณากรอกรหัสผ่าน', 'error'); return; }
+    setLoading('adminLoginBtn', true);
+    apiPost('checkAdminPassword', { password: pwd })
+      .then(function (res) {
+        setLoading('adminLoginBtn', false);
+        if (res && res.ok) {
+          STATE.user = { role: 'admin', name: 'ผู้ดูแลระบบ' };
+          enterApp();
+        } else {
+          showLoginMsg('รหัสผ่านไม่ถูกต้อง', 'error');
+        }
+      })
+      .catch(function (err) { setLoading('adminLoginBtn', false); showLoginMsg(err.message, 'error'); });
+  }
+
+  function showLoginMsg(text, type) {
+    var box = document.getElementById('loginMsg');
+    box.innerText = text;
+    box.className = 'msg ' + type;
+    box.style.display = 'block';
+  }
+
+  function logout() {
+    STATE.user = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  function enterApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('userLabel').innerText = STATE.user.name;
+    goto('dashboard');
+  }
+
+  // ============ NAV ============
+  function goto(view) {
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+    document.querySelectorAll('.nav button').forEach(function (b) { b.classList.remove('active'); });
+    document.getElementById('view-' + view).classList.add('active');
+    var navBtn = document.getElementById('nav-' + view);
+    if (navBtn) navBtn.classList.add('active');
+
+    if (view === 'dashboard') loadDashboard();
+    if (view === 'booking') loadBookingList();
+    if (view === 'files') loadFileList();
+    if (view === 'evaluation') { loadEvalBookingOptions(); loadEvalList(); }
+    if (view === 'admin') { loadAdminBookings(); loadAdminFiles(); loadReportSelectors(); switchAdminTab('bookings'); }
+  }
+
+  function setLoading(btnId, loading) {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.dataset.orig = btn.dataset.orig || btn.innerText;
+    btn.innerHTML = loading ? '<span class="spinner"></span> กำลังบันทึก...' : btn.dataset.orig;
+  }
+
+  function statusBadgeClass(status) {
+    var map = { 'รอดำเนินการ': 'pending', 'ยืนยันแล้ว': 'confirmed', 'ปฏิเสธ': 'rejected', 'นิเทศแล้ว': 'done',
+      'รอตรวจสอบ': 'review', 'ผ่าน': 'pass', 'ปรับปรุง': 'pending' };
+    return map[status] || 'pending';
+  }
+
+  // ============ DASHBOARD ============
+  function loadDashboard() {
+    var box = document.getElementById('dashboardBox');
+    box.innerHTML = '<div class="empty">กำลังโหลดข้อมูล...</div>';
+    apiGet('getDashboardStats').then(function (stats) {
+      var html = '';
+      html += '<div class="grid grid-4">';
+      html += statCard(stats.totalBookings, 'การจองทั้งหมด');
+      html += statCard(stats.statusCount['นิเทศแล้ว'] || 0, 'นิเทศแล้ว');
+      html += statCard(stats.totalFiles, 'ไฟล์งานที่ส่ง');
+      html += statCard(stats.totalEvaluations, 'ผลการประเมิน');
+      html += '</div>';
+
+      html += '<div class="grid grid-2">';
+      html += '<div class="card"><h3>สถานะการจอง</h3>' + barList(stats.statusCount) + '</div>';
+      html += '<div class="card"><h3>สถานะไฟล์งาน</h3>' + barList(stats.fileStatusCount) + '</div>';
+      html += '</div>';
+
+      html += '<div class="card"><h3>การจองล่าสุด</h3>' + bookingTable(stats.recentBookings, false) + '</div>';
+      html += '<div class="card"><h3>ไฟล์งานที่ส่งล่าสุด</h3>' + fileTable(stats.recentFiles, false) + '</div>';
+
+      box.innerHTML = html;
+    }).catch(function (err) {
+      box.innerHTML = '<div class="msg error">โหลดข้อมูลแดชบอร์ดไม่สำเร็จ: ' + err.message + '</div>';
+    });
+  }
+
+  function statCard(num, label) {
+    return '<div class="card stat-card"><div class="num">' + num + '</div><div class="label">' + label + '</div></div>';
+  }
+
+  function barList(obj) {
+    var max = Math.max.apply(null, Object.values(obj).concat([1]));
+    return Object.keys(obj).map(function (k) {
+      var pct = Math.round((obj[k] / max) * 100);
+      return '<div style="margin:8px 0;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;"><span>' + k + '</span><b>' + obj[k] + '</b></div>' +
+        '<div style="background:#eee;border-radius:6px;height:8px;"><div style="width:' + pct + '%;background:var(--primary);height:8px;border-radius:6px;"></div></div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ============ BOOKING ============
+  function submitBooking() {
+    var data = {
+      teacherName: document.getElementById('bkTeacherName').value.trim(),
+      date: document.getElementById('bkDate').value,
+      time: document.getElementById('bkTime').value.trim(),
+      department: document.getElementById('bkDepartment').value,
+      period: document.getElementById('bkPeriod').value,
+      subjectName: document.getElementById('bkSubjectName').value.trim(),
+      subjectCode: document.getElementById('bkSubjectCode').value.trim(),
+      classLevel: document.getElementById('bkClassLevel').value,
+      room: document.getElementById('bkRoom').value.trim()
+    };
+    if (!data.teacherName || !data.date || !data.department || !data.period || !data.subjectName) {
+      showMsg('bookingMsg', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+      return;
+    }
+    setLoading('bookingSubmitBtn', true);
+    apiPost('addBooking', data)
+      .then(function (res) {
+        setLoading('bookingSubmitBtn', false);
+        showMsg('bookingMsg', res.message, res.success ? 'success' : 'error');
+        if (res.success) {
+          document.getElementById('bkDate').value = '';
+          document.getElementById('bkTime').value = '';
+          document.getElementById('bkSubjectName').value = '';
+          document.getElementById('bkSubjectCode').value = '';
+          document.getElementById('bkRoom').value = '';
+          loadBookingList();
+        }
+      })
+      .catch(function (err) { setLoading('bookingSubmitBtn', false); showMsg('bookingMsg', err.message, 'error'); });
+  }
+
+  function loadBookingList() {
+    var box = document.getElementById('myBookingList');
+    box.innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    apiGet('getBookings')
+      .then(function (list) { box.innerHTML = bookingTable(list, true); })
+      .catch(function (err) { box.innerHTML = '<div class="msg error">โหลดรายการจองไม่สำเร็จ: ' + err.message + '</div>'; });
+  }
+
+  function bookingTable(list, showActions) {
+    if (!list || !list.length) return '<div class="empty">ยังไม่มีข้อมูลการจอง</div>';
+    var rows = list.map(function (b) {
+      return '<tr><td>' + fmtDate(b.Date) + '</td><td>' + b.Period + ' (' + b.Time + ')</td>' +
+        '<td>' + b['Teacher Name'] + '</td><td>' + b.Department + '</td>' +
+        '<td>' + b['Subject Name'] + '</td><td>' + b['Class Level'] + '</td>' +
+        '<td><span class="badge ' + statusBadgeClass(b.Status) + '">' + b.Status + '</span></td>' +
+        (showActions ? '<td>' + bookingActions(b) + '</td>' : '') + '</tr>';
+    }).join('');
+    return '<div style="overflow-x:auto;"><table><thead><tr><th>วันที่</th><th>คาบ/เวลา</th><th>ครู</th><th>กลุ่มสาระ</th><th>วิชา</th><th>ระดับชั้น</th><th>สถานะ</th>' +
+      (showActions ? '<th>จัดการ</th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function bookingActions(b) {
+    var actions = '<button class="btn small secondary" onclick="setBookingStatus(\'' + b.ID + '\',\'ยืนยันแล้ว\')">ยืนยัน</button> ' +
+      '<button class="btn small danger" onclick="setBookingStatus(\'' + b.ID + '\',\'ปฏิเสธ\')">ปฏิเสธ</button>';
+    if (b.Status === 'รอดำเนินการ') {
+      actions += ' <button class="btn small danger" onclick="removeBooking(\'' + b.ID + '\')">ลบ</button>';
+    }
+    return actions;
+  }
+
+  function setBookingStatus(id, status) {
+    apiPost('updateBookingStatus', { id: id, status: status })
+      .then(function () { loadBookingList(); loadAdminBookings(); })
+      .catch(function (err) { alert('อัปเดตสถานะไม่สำเร็จ: ' + err.message); });
+  }
+
+  function removeBooking(id) {
+    if (!confirm('ยืนยันการยกเลิกการจองนี้?')) return;
+    apiPost('deleteBooking', { id: id })
+      .then(function () { loadBookingList(); })
+      .catch(function (err) { alert('ลบไม่สำเร็จ: ' + err.message); });
+  }
+
+  function fmtDate(d) {
+    if (!d) return '-';
+    var dt = new Date(d);
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  // ============ FILES ============
+  function selectFileType(type) {
+    STATE.currentFileType = type;
+    document.querySelectorAll('.file-type-tabs button').forEach(function (b) { b.classList.remove('active'); });
+    document.getElementById('ftab-' + type).classList.add('active');
+    document.getElementById('flLinkBox').style.display = type === 'คลิปวิดีโอ' ? 'block' : 'none';
+    document.getElementById('flFileBox').style.display = type === 'คลิปวิดีโอ' ? 'none' : 'block';
+  }
+
+  function submitFile() {
+    var teacherName = document.getElementById('flTeacherName').value.trim();
+    var note = document.getElementById('flNote').value.trim();
+    if (!teacherName) { showMsg('fileMsg', 'กรุณากรอกชื่อ-สกุลครู', 'error'); return; }
+
+    if (STATE.currentFileType === 'คลิปวิดีโอ') {
+      var link = document.getElementById('flLinkInput').value.trim();
+      if (!link) { showMsg('fileMsg', 'กรุณาใส่ลิงก์คลิปวิดีโอ', 'error'); return; }
+      doUploadFile({ isLink: true, linkUrl: link, fileType: STATE.currentFileType, teacherName: teacherName, note: note });
+      return;
+    }
+
+    var input = document.getElementById('flFileInput');
+    if (!input.files || !input.files[0]) { showMsg('fileMsg', 'กรุณาเลือกไฟล์', 'error'); return; }
+    var file = input.files[0];
+    var reader = new FileReader();
+    setLoading('fileSubmitBtn', true);
+    reader.onload = function (e) {
+      var base64 = e.target.result.split(',')[1];
+      doUploadFile({
+        isLink: false, base64: base64, mimeType: file.type || 'application/octet-stream',
+        fileName: file.name, fileType: STATE.currentFileType, teacherName: teacherName, note: note
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function doUploadFile(payload) {
+    setLoading('fileSubmitBtn', true);
+    apiPost('uploadFile', payload)
+      .then(function (res) {
+        setLoading('fileSubmitBtn', false);
+        showMsg('fileMsg', res.message, res.success ? 'success' : 'error');
+        if (res.success) {
+          document.getElementById('flNote').value = '';
+          var fi = document.getElementById('flFileInput'); if (fi) fi.value = '';
+          var li = document.getElementById('flLinkInput'); if (li) li.value = '';
+          loadFileList();
+        }
+      })
+      .catch(function (err) { setLoading('fileSubmitBtn', false); showMsg('fileMsg', err.message, 'error'); });
+  }
+
+  function loadFileList() {
+    var box = document.getElementById('myFileList');
+    box.innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    apiGet('getFiles')
+      .then(function (list) { box.innerHTML = fileTable(list, false); })
+      .catch(function (err) { box.innerHTML = '<div class="msg error">โหลดไฟล์งานไม่สำเร็จ: ' + err.message + '</div>'; });
+  }
+
+  function fileTable(list, compact) {
+    if (!list || !list.length) return '<div class="empty">ยังไม่มีไฟล์งานที่ส่ง</div>';
+    var rows = list.map(function (f) {
+      return '<tr><td>' + fmtDate(f.Timestamp) + '</td><td>' + f['Teacher Name'] + '</td>' +
+        '<td>' + f['File Type'] + '</td><td><a href="' + f['File URL'] + '" target="_blank">เปิดไฟล์</a></td>' +
+        '<td><span class="badge ' + statusBadgeClass(f.Status) + '">' + f.Status + '</span></td></tr>';
+    }).join('');
+    return '<div style="overflow-x:auto;"><table><thead><tr><th>วันที่ส่ง</th><th>ครู</th><th>ประเภท</th><th>ไฟล์</th><th>สถานะ</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  // ============ EVALUATION (admin) — แบบนิเทศการสอน ============
+  function renderCriteria(criteria) {
+    var box = document.getElementById('evCriteriaBox');
+    if (!box || !criteria) return;
+    var html = '';
+    criteria.forEach(function (section, sIdx) {
+      html += '<div class="criteria-section"><h4>' + (sIdx + 1) + ') ' + section.title + ' (' + section.max + ' คะแนน)</h4>';
+      section.items.forEach(function (item, iIdx) {
+        var name = 'score_' + section.key + '_' + iIdx;
+        html += '<div class="criteria-item"><span class="txt">' + (sIdx + 1) + '.' + (iIdx + 1) + ') ' + item + '</span>';
+        html += '<div class="score-radios">';
+        [4, 3, 2, 1, 0].forEach(function (v) {
+          html += '<label onclick="onScoreClick(this)"><input type="radio" name="' + name + '" value="' + v + '" data-section="' + section.key + '" onchange="calcScores()"><span>' + v + '</span></label>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  function onScoreClick(label) {
+    var group = label.querySelector('input').name;
+    document.querySelectorAll('input[name="' + group + '"]').forEach(function (inp) {
+      inp.closest('label').classList.remove('active-score');
+    });
+    label.classList.add('active-score');
+  }
+
+  function calcScores() {
+    var totals = { s1: 0, s2: 0, s3: 0 };
+    STATE.config.evalCriteria.forEach(function (section) {
+      section.items.forEach(function (item, iIdx) {
+        var checked = document.querySelector('input[name="score_' + section.key + '_' + iIdx + '"]:checked');
+        if (checked) totals[section.key] += Number(checked.value);
+      });
+    });
+    document.getElementById('evScore1').innerText = totals.s1;
+    document.getElementById('evScore2').innerText = totals.s2;
+    document.getElementById('evScore3').innerText = totals.s3;
+    var total = totals.s1 + totals.s2 + totals.s3;
+    document.getElementById('evScoreTotal').innerText = total;
+    document.getElementById('evQualityLabel').innerText = 'คะแนนรวม (เต็ม 100) · ' + qualityLevelLabel(total);
+    return totals;
+  }
+
+  function qualityLevelLabel(total) {
+    if (total >= 90) return 'ดีเยี่ยม';
+    if (total >= 80) return 'ดีมาก';
+    if (total >= 70) return 'ดี';
+    if (total >= 60) return 'พอใช้';
+    return 'ปรับปรุง';
+  }
+
+  function collectScores() {
+    var scores = { s1: [], s2: [], s3: [] };
+    STATE.config.evalCriteria.forEach(function (section) {
+      section.items.forEach(function (item, iIdx) {
+        var checked = document.querySelector('input[name="score_' + section.key + '_' + iIdx + '"]:checked');
+        scores[section.key].push(checked ? Number(checked.value) : 0);
+      });
+    });
+    return scores;
+  }
+
+  function loadEvalBookingOptions() {
+    var sel = document.getElementById('evBookingId');
+    apiGet('getBookings')
+      .then(function (list) {
+        var opts = (list || []).filter(function (b) { return b.Status !== 'ปฏิเสธ'; });
+        sel.innerHTML = '<option value="">-- ไม่ผูกกับการจอง --</option>' + opts.map(function (b) {
+          return '<option value="' + b.ID + '" data-teacher="' + b['Teacher Name'] + '" data-date="' + b.Date + '"' +
+            ' data-subjectcode="' + (b['Subject Code'] || '') + '" data-subjectname="' + (b['Subject Name'] || '') + '"' +
+            ' data-classlevel="' + (b['Class Level'] || '') + '" data-time="' + (b.Time || '') + '">' +
+            fmtDate(b.Date) + ' - ' + b['Teacher Name'] + ' (' + b['Subject Name'] + ')</option>';
+        }).join('');
+      })
+      .catch(function (err) {
+        sel.innerHTML = '<option value="">-- ไม่ผูกกับการจอง --</option>';
+        showMsg('evalMsg', 'โหลดรายการจองไม่สำเร็จ: ' + err.message, 'error');
+      });
+  }
+
+  function onEvalBookingChange() {
+    var sel = document.getElementById('evBookingId');
+    var opt = sel.options[sel.selectedIndex];
+    if (opt && opt.dataset.teacher) {
+      document.getElementById('evTeacherName').value = opt.dataset.teacher;
+      document.getElementById('evDate').value = opt.dataset.date ? opt.dataset.date.substring(0, 10) : '';
+      document.getElementById('evSubjectCode').value = opt.dataset.subjectcode || '';
+      document.getElementById('evSubjectName').value = opt.dataset.subjectname || '';
+      document.getElementById('evClassLevel').value = opt.dataset.classlevel || '';
+      document.getElementById('evTime').value = opt.dataset.time || '';
+    }
+  }
+
+  function submitEvaluation() {
+    var data = {
+      bookingId: document.getElementById('evBookingId').value,
+      teacherName: document.getElementById('evTeacherName').value.trim(),
+      position: document.getElementById('evPosition').value.trim(),
+      subjectCode: document.getElementById('evSubjectCode').value.trim(),
+      subjectName: document.getElementById('evSubjectName').value.trim(),
+      classLevel: document.getElementById('evClassLevel').value.trim(),
+      studentCount: document.getElementById('evStudentCount').value,
+      supervisionDate: document.getElementById('evDate').value,
+      time: document.getElementById('evTime').value.trim(),
+      supervisors: [
+        document.getElementById('evSup1').value.trim(),
+        document.getElementById('evSup2').value.trim(),
+        document.getElementById('evSup3').value.trim()
+      ],
+      scores: collectScores(),
+      suggestions: document.getElementById('evSuggestions').value.trim(),
+      evaluator: STATE.user.name
+    };
+    if (!data.teacherName || !data.supervisionDate) {
+      showMsg('evalMsg', 'กรุณากรอกชื่อครูและวันที่นิเทศให้ครบถ้วน', 'error');
+      return;
+    }
+    setLoading('evalSubmitBtn', true);
+    apiPost('addEvaluation', data)
+      .then(function (res) {
+        setLoading('evalSubmitBtn', false);
+        showMsg('evalMsg', res.message + (res.success ? ' (คะแนนรวม ' + res.total + '/100 · ' + res.quality + ')' : ''), res.success ? 'success' : 'error');
+        if (res.success) {
+          ['evTeacherName', 'evPosition', 'evSubjectCode', 'evSubjectName', 'evClassLevel',
+            'evStudentCount', 'evDate', 'evTime', 'evSup1', 'evSup2', 'evSup3', 'evSuggestions'].forEach(function (id) {
+            document.getElementById(id).value = '';
+          });
+          document.querySelectorAll('#evCriteriaBox input[type="radio"]:checked').forEach(function (r) { r.checked = false; });
+          calcScores();
+          loadEvalList();
+        }
+      })
+      .catch(function (err) { setLoading('evalSubmitBtn', false); showMsg('evalMsg', err.message, 'error'); });
+  }
+
+  function loadEvalList() {
+    var box = document.getElementById('evalList');
+    box.innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    apiGet('getEvaluations')
+      .then(function (list) {
+        if (!list.length) { box.innerHTML = '<div class="empty">ยังไม่มีผลการนิเทศ</div>'; return; }
+        var rows = list.map(function (e) {
+          return '<tr><td>' + fmtDate(e['Supervision Date']) + '</td><td>' + e['Teacher Name'] + '</td>' +
+            '<td>' + e['Total Score'] + '/100</td><td>' + e['Quality Level'] + '</td>' +
+            '<td>' + (e.Suggestions || '').substring(0, 60) + '</td>' +
+            '<td><button class="btn small secondary" onclick="printEvaluationDetail(\'' + e.ID + '\')">🖨️ พิมพ์แบบนิเทศ</button></td></tr>';
+        }).join('');
+        box.innerHTML = '<div style="overflow-x:auto;"><table><thead><tr><th>วันที่นิเทศ</th><th>ครู</th><th>คะแนนรวม</th><th>ระดับคุณภาพ</th><th>ข้อเสนอแนะ</th><th>พิมพ์</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      })
+      .catch(function (err) { box.innerHTML = '<div class="msg error">โหลดผลการนิเทศไม่สำเร็จ: ' + err.message + '</div>'; });
+  }
+
+  function printEvaluationDetail(id) {
+    apiGet('getEvaluationById', { id: id }).then(function (e) {
+      if (!e) { alert('ไม่พบข้อมูลการนิเทศนี้'); return; }
+      var scores = {};
+      try { scores = JSON.parse(e['Scores JSON'] || '{}'); } catch (err) { scores = {}; }
+      var criteria = STATE.config.evalCriteria;
+      var total = Number(e['Total Score']) || 0;
+      var sectionTotals = { s1: Number(e['Section1 Score']) || 0, s2: Number(e['Section2 Score']) || 0, s3: Number(e['Section3 Score']) || 0 };
+
+      var html = '<div class="report-letterhead">' +
+        '<div class="emblem">🏫</div>' +
+        '<p class="school">โรงเรียนบ้านป่าฝาง</p>' +
+        '<p class="office">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสตูล</p>' +
+        '</div>';
+
+      html += '<div class="eval-print-header"><p class="doctitle">แบบนิเทศการสอน</p></div>';
+      html += '<div class="eval-print-fields">' +
+        '<div class="r"><span>ชื่อผู้รับการนิเทศ &nbsp;<b>' + e['Teacher Name'] + '</b></span>' +
+        '<span>ตำแหน่ง &nbsp;<b>' + (e.Position || '-') + '</b></span></div>' +
+        '<div class="r"><span>รหัสวิชา &nbsp;<b>' + (e['Subject Code'] || '-') + '</b></span>' +
+        '<span>ชื่อวิชา &nbsp;<b>' + (e['Subject Name'] || '-') + '</b></span>' +
+        '<span>ระดับชั้น &nbsp;<b>' + (e['Class Level'] || '-') + '</b></span>' +
+        '<span>จำนวนนักเรียน &nbsp;<b>' + (e['Student Count'] || '-') + '</b> คน</span></div>' +
+        '<div class="r"><span>วันที่สอน &nbsp;<b>' + fmtDate(e['Supervision Date']) + '</b></span>' +
+        '<span>เวลา &nbsp;<b>' + (e.Time || '-') + '</b></span></div>' +
+        '<div class="r"><span>ชื่อผู้นิเทศ &nbsp;<b>' + (e.Supervisors || '-') + '</b></span></div>' +
+        '</div>';
+
+      criteria.forEach(function (section, sIdx) {
+        html += '<table class="eval-score-table"><thead><tr><th>' + (sIdx + 1) + ') ' + section.title + '</th>' +
+          '<th>4</th><th>3</th><th>2</th><th>1</th><th>0</th></tr></thead><tbody>';
+        section.items.forEach(function (item, iIdx) {
+          var val = (scores[section.key] && scores[section.key][iIdx] !== undefined) ? scores[section.key][iIdx] : null;
+          html += '<tr><td>' + (sIdx + 1) + '.' + (iIdx + 1) + ') ' + item + '</td>';
+          [4, 3, 2, 1, 0].forEach(function (v) {
+            html += '<td class="' + (val === v ? 'sel' : '') + '">' + (val === v ? '✓' : '') + '</td>';
+          });
+          html += '</tr>';
+        });
+        html += '<tr class="subtotal"><td colspan="6">รวมคะแนนด้านที่ ' + (sIdx + 1) + ' (' + section.max + ' คะแนน) &nbsp; = &nbsp; ' + sectionTotals[section.key] + '</td></tr>';
+        html += '</tbody></table>';
+      });
+
+      html += '<p style="font-weight:700;font-size:14px;margin:10px 0;">รวมคะแนนทั้ง 3 ด้าน (100 คะแนน) = ' + total + ' คะแนน &nbsp;·&nbsp; ระดับคุณภาพ: ' + e['Quality Level'] + '</p>';
+
+      html += '<table class="quality-band-table"><thead><tr><th>คะแนน</th><th>ระดับคุณภาพ</th></tr></thead><tbody>' +
+        [[90, 100, 'ดีเยี่ยม'], [80, 89, 'ดีมาก'], [70, 79, 'ดี'], [60, 69, 'พอใช้'], [0, 59, 'ปรับปรุง']].map(function (b) {
+          var isCurrent = total >= b[0] && total <= b[1];
+          return '<tr class="' + (isCurrent ? 'current' : '') + '"><td>' + (b[0] === 0 ? 'ต่ำกว่า 60' : b[0] + ' - ' + b[1]) + '</td><td>' + b[2] + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+      html += '<p style="font-weight:700;font-size:13px;margin:14px 0 4px;">ข้อเสนอแนะของครูผู้นิเทศ</p>';
+      html += '<div class="eval-suggestion-box">' + (e.Suggestions || '-') + '</div>';
+
+      html += '<div class="signature-block">' +
+        '<div><div class="line"></div>(' + e['Teacher Name'] + ')<div class="role">ผู้รับการนิเทศ</div></div>' +
+        '<div><div class="line"></div>(' + (e.Supervisors || '............................') + ')<div class="role">ผู้นิเทศ</div></div>' +
+        '</div>';
+
+      document.getElementById('evalDetailBox').innerHTML = html;
+      setTimeout(function () { window.print(); }, 200);
+    }).catch(function (err) { alert('โหลดข้อมูลไม่สำเร็จ: ' + err.message); });
+  }
+
+  // ============ ADMIN ============
+  function switchAdminTab(tab) {
+    ['bookings', 'files', 'reports'].forEach(function (t) {
+      document.getElementById('admintab-' + t).style.display = t === tab ? 'block' : 'none';
+      document.getElementById('adminbtn-' + t).classList.toggle('active', t === tab);
+    });
+  }
+
+  function loadAdminBookings() {
+    var box = document.getElementById('adminBookingList');
+    box.innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    apiGet('getBookings')
+      .then(function (list) { box.innerHTML = bookingTable(list, true); })
+      .catch(function (err) { box.innerHTML = '<div class="msg error">โหลดรายการจองไม่สำเร็จ: ' + err.message + '</div>'; });
+  }
+
+  function loadAdminFiles() {
+    var box = document.getElementById('adminFileList');
+    box.innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    apiGet('getFiles')
+      .then(function (list) {
+        if (!list.length) { box.innerHTML = '<div class="empty">ยังไม่มีไฟล์งาน</div>'; return; }
+        var rows = list.map(function (f) {
+          return '<tr><td>' + fmtDate(f.Timestamp) + '</td><td>' + f['Teacher Name'] + '</td>' +
+            '<td>' + f['File Type'] + '</td><td><a href="' + f['File URL'] + '" target="_blank">เปิดไฟล์</a></td>' +
+            '<td><span class="badge ' + statusBadgeClass(f.Status) + '">' + f.Status + '</span></td>' +
+            '<td><button class="btn small secondary" onclick="setFileStatus(\'' + f.ID + '\',\'ผ่าน\')">ผ่าน</button> ' +
+            '<button class="btn small warn" onclick="setFileStatus(\'' + f.ID + '\',\'ปรับปรุง\')">ขอปรับปรุง</button></td></tr>';
+        }).join('');
+        box.innerHTML = '<div style="overflow-x:auto;"><table><thead><tr><th>วันที่ส่ง</th><th>ครู</th><th>ประเภท</th><th>ไฟล์</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      })
+      .catch(function (err) { box.innerHTML = '<div class="msg error">โหลดไฟล์งานไม่สำเร็จ: ' + err.message + '</div>'; });
+  }
+
+  function setFileStatus(id, status) {
+    apiPost('updateFileStatus', { id: id, status: status })
+      .then(function () { loadAdminFiles(); })
+      .catch(function (err) { alert('อัปเดตสถานะไม่สำเร็จ: ' + err.message); });
+  }
+
+  function loadTeacherReport() {
+    var name = document.getElementById('reportTeacherSelect').value;
+    if (!name) return;
+    STATE.lastReport = { type: 'teacher', value: name };
+    apiGet('getTeacherReport', { teacherName: name }).then(function (data) {
+      var photos = (data.files || []).filter(function (f) { return f['File Type'] === 'ภาพกิจกรรม' && f['Drive File ID']; });
+      renderReport('รายงานรายบุคคล: ' + name, data.bookings, data.files, data.evaluations, photos);
+    }).catch(function (err) { alert('โหลดรายงานไม่สำเร็จ: ' + err.message); });
+  }
+
+  function loadDepartmentReport() {
+    var dept = document.getElementById('reportDeptSelect').value;
+    if (!dept) return;
+    STATE.lastReport = { type: 'department', value: dept };
+    apiGet('getDepartmentReport', { department: dept }).then(function (data) {
+      var photos = (data.files || []).filter(function (f) { return f['File Type'] === 'ภาพกิจกรรม' && f['Drive File ID']; });
+      renderReport('รายงานกลุ่มสาระ: ' + dept, data.bookings, [], data.evaluations, photos);
+    }).catch(function (err) { alert('โหลดรายงานไม่สำเร็จ: ' + err.message); });
+  }
+
+  function refreshReportMeta() {
+    if (!STATE.lastReport) return;
+    if (STATE.lastReport.type === 'teacher') loadTeacherReport();
+    else loadDepartmentReport();
+  }
+
+  function renderReport(title, bookings, files, evals, photos) {
+    var term = (document.getElementById('rmTerm').value || '-').trim();
+    var recorder = (document.getElementById('rmRecorder').value || '').trim();
+    var approver = (document.getElementById('rmApprover').value || '').trim();
+    var today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    var html = '<div class="report-letterhead">' +
+      '<div class="emblem">🏫</div>' +
+      '<p class="school">โรงเรียนบ้านป่าฝาง</p>' +
+      '<p class="office">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสตูล</p>' +
+      '<p class="title">รายงานผลการนิเทศภายในโรงเรียน · ' + title + '</p>' +
+      '<p class="meta">ภาคเรียนที่ / ปีการศึกษา ' + term + ' &nbsp;·&nbsp; พิมพ์เมื่อวันที่ ' + today + '</p>' +
+      '</div>';
+
+    html += '<h4>การจองนิเทศ</h4>' + bookingTable(bookings, false);
+    if (files && files.length) html += '<h4 style="margin-top:16px;">ไฟล์งาน</h4>' + fileTable(files, false);
+    html += '<h4 style="margin-top:16px;">ผลการนิเทศ</h4>';
+    if (!evals || !evals.length) {
+      html += '<div class="empty">ยังไม่มีผลการนิเทศ</div>';
+    } else {
+      html += '<table><thead><tr><th>วันที่</th><th>ครู</th><th>วิชา</th><th>คะแนนรวม</th><th>ระดับคุณภาพ</th><th>ข้อเสนอแนะ</th></tr></thead><tbody>';
+      html += evals.map(function (e) {
+        return '<tr><td>' + fmtDate(e['Supervision Date']) + '</td><td>' + e['Teacher Name'] + '</td>' +
+          '<td>' + (e['Subject Name'] || '-') + '</td><td>' + e['Total Score'] + '/100</td>' +
+          '<td>' + e['Quality Level'] + '</td><td>' + (e.Suggestions || '-') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+    }
+
+    if (photos && photos.length) {
+      html += '<h4 style="margin-top:16px;">ภาพกิจกรรมการนิเทศ</h4><div class="report-photos">';
+      html += photos.map(function (p) {
+        var src = 'https://drive.google.com/thumbnail?id=' + p['Drive File ID'] + '&sz=w600';
+        return '<figure><img src="' + src + '" alt="ภาพกิจกรรมการนิเทศของ ' + p['Teacher Name'] + '">' +
+          '<figcaption>' + p['Teacher Name'] + ' · ' + fmtDate(p.Timestamp) + '</figcaption></figure>';
+      }).join('') + '</div>';
+    }
+
+    html += '<div class="signature-block">' +
+      '<div><div class="line"></div>(' + (recorder || '............................................') + ')<div class="role">ผู้บันทึกรายงาน</div></div>' +
+      '<div><div class="line"></div>(' + (approver || '............................................') + ')<div class="role">ผู้รับรองรายงาน</div></div>' +
+      '</div>';
+
+    document.getElementById('reportBox').innerHTML = html;
+  }
+
+  function loadReportSelectors() {
+    apiGet('getAllTeacherNames').then(function (names) {
+      var sel = document.getElementById('reportTeacherSelect');
+      sel.innerHTML = '<option value="">-- เลือกครู --</option>' + names.map(function (n) { return '<option value="' + n + '">' + n + '</option>'; }).join('');
+    }).catch(function (err) { console.error('โหลดรายชื่อครูไม่สำเร็จ:', err.message); });
+    fillSelect('reportDeptSelect', STATE.config.departments);
+  }
+
+  function printReport() {
+    window.print();
+  }
+
+  // ============ MISC ============
+  function showMsg(id, text, type) {
+    var box = document.getElementById(id);
+    box.innerText = text;
+    box.className = 'msg ' + type;
+    box.style.display = 'block';
+    setTimeout(function () { box.style.display = 'none'; }, 5000);
+  }
+</script>
+</body>
+</html>
