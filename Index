@@ -512,7 +512,7 @@
 
 <script>
   // ⚙️⚙️⚙️ ตั้งค่าตรงนี้ก่อนใช้งาน — วาง URL เว็บแอป Apps Script ที่ deploy แล้ว (ลงท้ายด้วย /exec) ⚙️⚙️⚙️
-  var API_URL = 'วาง URL ของ Apps Script Web App ตรงนี้ (ลงท้ายด้วย /exec)';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbzvqQCuR-DngScQQg-sq9vDhsbYNMjuOGMNf4bzcMa4kpUnwNqH-Ee12urxNak9N-u1/exec';
 
   // ============ API LAYER (JSONP สำหรับอ่าน, fetch POST สำหรับเขียน) ============
   function apiGet(action, params) {
