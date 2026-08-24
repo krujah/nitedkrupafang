@@ -192,6 +192,22 @@
   .report-meta-form { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
   .report-meta-form > div { flex: 1; min-width: 160px; }
 
+  .session-progress {
+    background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 10px 14px;
+    font-size: 15px; margin: 10px 0; color: #1565c0;
+  }
+  .session-progress b { color: #0d47a1; }
+  .evaluator-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .evaluator-badge {
+    background: #fff; border: 1px solid #90caf9; border-radius: 20px; padding: 3px 12px; font-size: 13px; color: #1565c0;
+  }
+  .evaluator-badge.pending { border-style: dashed; color: var(--muted); border-color: var(--border); }
+  .session-card { border-left: 4px solid var(--primary); }
+  .session-card .sess-title { font-size: 17px; font-weight: 700; margin: 0 0 4px; }
+  .session-card .sess-meta { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+  .avg-score-box { text-align: center; }
+  .avg-score-box .num { font-size: 26px; font-weight: 800; color: var(--primary-dark); }
+
   .report-photos {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; page-break-inside: avoid;
   }
@@ -396,6 +412,7 @@
           <h2>📝 แบบนิเทศการสอน</h2>
           <label>เลือกจากรายการจอง (ถ้ามี)</label>
           <select id="evBookingId" onchange="onEvalBookingChange()"></select>
+          <div id="evSessionProgress" style="display:none;"></div>
 
           <div class="row">
             <div>
@@ -435,20 +452,9 @@
               <input type="text" id="evTime" placeholder="09.00-10.00 น.">
             </div>
           </div>
-          <div class="row">
-            <div>
-              <label>ชื่อผู้นิเทศ คนที่ 1</label>
-              <input type="text" id="evSup1">
-            </div>
-            <div>
-              <label>ชื่อผู้นิเทศ คนที่ 2</label>
-              <input type="text" id="evSup2">
-            </div>
-            <div>
-              <label>ชื่อผู้นิเทศ คนที่ 3</label>
-              <input type="text" id="evSup3">
-            </div>
-          </div>
+
+          <label>ชื่อ-สกุล กรรมการผู้ประเมิน (ท่านที่กำลังกรอกคะแนนอยู่นี้)</label>
+          <input type="text" id="evEvaluatorName" placeholder="เช่น นายสมชาย ใจดี">
 
           <div id="evCriteriaBox" style="margin-top:16px;"></div>
 
@@ -963,9 +969,15 @@
       });
   }
 
+  function sessionKey_(row) {
+    if (row['Booking ID']) return 'B:' + row['Booking ID'];
+    return 'C:' + (row['Teacher Name'] || '') + '|' + (row['Supervision Date'] || '') + '|' + (row['Subject Name'] || '');
+  }
+
   function onEvalBookingChange() {
     var sel = document.getElementById('evBookingId');
     var opt = sel.options[sel.selectedIndex];
+    var progBox = document.getElementById('evSessionProgress');
     if (opt && opt.dataset.teacher) {
       document.getElementById('evTeacherName').value = opt.dataset.teacher;
       document.getElementById('evDate').value = opt.dataset.date ? opt.dataset.date.substring(0, 10) : '';
@@ -973,6 +985,30 @@
       document.getElementById('evSubjectName').value = opt.dataset.subjectname || '';
       document.getElementById('evClassLevel').value = opt.dataset.classlevel || '';
       document.getElementById('evTime').value = opt.dataset.time || '';
+
+      if (sel.value) {
+        progBox.style.display = 'block';
+        progBox.className = 'session-progress';
+        progBox.innerHTML = 'กำลังตรวจสอบว่ามีกรรมการท่านใดประเมินรอบนี้ไปแล้วบ้าง...';
+        apiGet('getEvaluations').then(function (list) {
+          var mine = (list || []).filter(function (e) { return e['Booking ID'] === sel.value; });
+          var evaluatorNames = mine.map(function (e) { return e.Evaluator; }).filter(Boolean);
+          var html = '<b>รอบนิเทศนี้มีกรรมการประเมินแล้ว ' + mine.length + ' / 3 ท่าน</b><div class="evaluator-badges">';
+          for (var i = 0; i < 3; i++) {
+            if (evaluatorNames[i]) {
+              html += '<span class="evaluator-badge">✓ ' + evaluatorNames[i] + '</span>';
+            } else {
+              html += '<span class="evaluator-badge pending">ยังไม่ประเมิน</span>';
+            }
+          }
+          html += '</div>';
+          progBox.innerHTML = html;
+        }).catch(function () { progBox.style.display = 'none'; });
+      } else {
+        progBox.style.display = 'none';
+      }
+    } else {
+      progBox.style.display = 'none';
     }
   }
 
@@ -1036,21 +1072,37 @@
       studentCount: document.getElementById('evStudentCount').value,
       supervisionDate: document.getElementById('evDate').value,
       time: document.getElementById('evTime').value.trim(),
-      supervisors: [
-        document.getElementById('evSup1').value.trim(),
-        document.getElementById('evSup2').value.trim(),
-        document.getElementById('evSup3').value.trim()
-      ],
       scores: collectScores(),
       suggestions: document.getElementById('evSuggestions').value.trim(),
-      evaluator: STATE.user.name
+      evaluator: document.getElementById('evEvaluatorName').value.trim()
     };
     if (!data.teacherName || !data.supervisionDate) {
       showMsg('evalMsg', 'กรุณากรอกชื่อครูและวันที่นิเทศให้ครบถ้วน', 'error');
       return;
     }
+    if (!data.evaluator) {
+      showMsg('evalMsg', 'กรุณากรอกชื่อกรรมการผู้ประเมิน (ท่านที่กำลังกรอกคะแนนอยู่นี้)', 'error');
+      return;
+    }
     setLoading('evalSubmitBtn', true);
-    apiPost('addEvaluation', data)
+    apiGet('getEvaluations').then(function (list) {
+      var key = sessionKey_(data.bookingId ? { 'Booking ID': data.bookingId } : { 'Teacher Name': data.teacherName, 'Supervision Date': data.supervisionDate, 'Subject Name': data.subjectName });
+      var dup = (list || []).some(function (e) {
+        return sessionKey_(e) === key && (e.Evaluator || '').trim().toLowerCase() === data.evaluator.toLowerCase();
+      });
+      if (dup && !confirm('กรรมการชื่อ "' + data.evaluator + '" เคยประเมินรอบนิเทศนี้ไปแล้ว ต้องการบันทึกซ้ำอีกครั้งหรือไม่?\n(ถ้าเป็นการแก้ไขคะแนน แนะนำให้บันทึกซ้ำได้ตามปกติ)')) {
+        setLoading('evalSubmitBtn', false);
+        return null;
+      }
+      return doSubmitEvaluation_(data);
+    }).catch(function () {
+      // เช็คซ้ำไม่สำเร็จก็ยังบันทึกต่อได้ตามปกติ ไม่บล็อกผู้ใช้
+      return doSubmitEvaluation_(data);
+    });
+  }
+
+  function doSubmitEvaluation_(data) {
+    return apiPost('addEvaluation', data)
       .then(function (res) {
         if (!res.success) {
           setLoading('evalSubmitBtn', false);
@@ -1061,11 +1113,12 @@
           setLoading('evalSubmitBtn', false);
           showMsg('evalMsg', res.message + ' (คะแนนรวม ' + res.total + '/100 · ' + res.quality + ')', 'success');
           ['evTeacherName', 'evPosition', 'evSubjectCode', 'evSubjectName', 'evClassLevel',
-            'evStudentCount', 'evDate', 'evTime', 'evSup1', 'evSup2', 'evSup3', 'evSuggestions'].forEach(function (id) {
+            'evStudentCount', 'evDate', 'evTime', 'evEvaluatorName', 'evSuggestions'].forEach(function (id) {
             document.getElementById(id).value = '';
           });
           document.querySelectorAll('#evCriteriaBox input[type="radio"]:checked').forEach(function (r) { r.checked = false; });
           calcScores();
+          document.getElementById('evSessionProgress').style.display = 'none';
           loadEvalList();
         }).catch(function (err) {
           setLoading('evalSubmitBtn', false);
@@ -1082,15 +1135,49 @@
     apiGet('getEvaluations')
       .then(function (list) {
         if (!list.length) { box.innerHTML = '<div class="empty">ยังไม่มีผลการนิเทศ</div>'; return; }
-        var rows = list.map(function (e) {
-          return '<tr><td>' + fmtDate(e['Supervision Date']) + '</td><td>' + e['Teacher Name'] + '</td>' +
-            '<td>' + e['Total Score'] + '/100</td><td>' + e['Quality Level'] + '</td>' +
-            '<td>' + (e.Suggestions || '').substring(0, 60) + '</td>' +
-            '<td><button class="btn small secondary" onclick="printEvaluationDetail(\'' + e.ID + '\')">🖨️ พิมพ์แบบนิเทศ</button></td></tr>';
-        }).join('');
-        box.innerHTML = '<div style="overflow-x:auto;"><table><thead><tr><th>วันที่นิเทศ</th><th>ครู</th><th>คะแนนรวม</th><th>ระดับคุณภาพ</th><th>ข้อเสนอแนะ</th><th>พิมพ์</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+        var groups = {};
+        list.forEach(function (e) {
+          var key = sessionKey_(e);
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(e);
+        });
+        var sessions = Object.keys(groups).map(function (key) { return groups[key]; });
+        // เรียงรอบล่าสุดก่อน (ใช้ Timestamp ของรายการล่าสุดในกลุ่ม)
+        sessions.sort(function (a, b) {
+          var ta = Math.max.apply(null, a.map(function (e) { return new Date(e.Timestamp).getTime(); }));
+          var tb = Math.max.apply(null, b.map(function (e) { return new Date(e.Timestamp).getTime(); }));
+          return tb - ta;
+        });
+
+        box.innerHTML = sessions.map(sessionCardHtml).join('');
       })
       .catch(function (err) { box.innerHTML = '<div class="msg error">โหลดผลการนิเทศไม่สำเร็จ: ' + err.message + '</div>'; });
+  }
+
+  function sessionCardHtml(evals) {
+    var first = evals[0];
+    var count = evals.length;
+    var avgTotal = Math.round((evals.reduce(function (s, e) { return s + (Number(e['Total Score']) || 0); }, 0) / count) * 10) / 10;
+    var avgQuality = qualityLevelLabel(avgTotal);
+    var key = sessionKey_(first);
+
+    var rows = evals.map(function (e) {
+      return '<tr><td>' + (e.Evaluator || '-') + '</td><td>' + e['Total Score'] + '/100</td>' +
+        '<td>' + e['Quality Level'] + '</td>' +
+        '<td><button class="btn small secondary" onclick="printEvaluationDetail(\'' + e.ID + '\')">🖨️ พิมพ์ของท่านนี้</button></td></tr>';
+    }).join('');
+
+    return '<div class="card session-card" style="margin-bottom:14px;">' +
+      '<div class="sess-title">' + first['Teacher Name'] + ' — ' + (first['Subject Name'] || '-') + '</div>' +
+      '<div class="sess-meta">' + fmtDate(first['Supervision Date']) + ' · ' + (first['Class Level'] || '-') +
+      ' · กรรมการประเมินแล้ว ' + count + ' ท่าน</div>' +
+      '<div class="row" style="align-items:center;">' +
+      '<div style="flex:2;"><table><thead><tr><th>กรรมการ</th><th>คะแนน</th><th>ระดับคุณภาพ</th><th>พิมพ์รายบุคคล</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="avg-score-box" style="flex:1;">' +
+      '<div class="num">' + avgTotal + '</div><div class="label">คะแนนเฉลี่ย (เต็ม 100)</div>' +
+      '<div style="margin-top:4px;font-weight:700;color:var(--primary-dark);">' + avgQuality + '</div>' +
+      '<button class="btn small" style="margin-top:10px;" onclick="printSessionSummary(\'' + encodeURIComponent(key) + '\')">🖨️ พิมพ์รายงานสรุป (เฉลี่ย)</button>' +
+      '</div></div></div>';
   }
 
   function printEvaluationDetail(id) {
@@ -1178,6 +1265,106 @@
         setTimeout(function () { window.print(); }, 200);
       });
     }).catch(function (err) { alert('โหลดข้อมูลไม่สำเร็จ: ' + err.message); });
+  }
+
+  function printSessionSummary(encodedKey) {
+    var key = decodeURIComponent(encodedKey);
+    apiGet('getEvaluations').then(function (list) {
+      var evals = (list || []).filter(function (e) { return sessionKey_(e) === key; });
+      if (!evals.length) { alert('ไม่พบข้อมูลรอบนิเทศนี้'); return; }
+      var first = evals[0];
+      var criteria = STATE.config.evalCriteria;
+      var scoresList = evals.map(function (e) {
+        try { return JSON.parse(e['Scores JSON'] || '{}'); } catch (err) { return {}; }
+      });
+
+      var today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+      var html = '<div class="report-letterhead">' +
+        '<div class="emblem">🏫</div>' +
+        '<p class="school">โรงเรียนบ้านป่าฝาง</p>' +
+        '<p class="office">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสตูล</p>' +
+        '</div>';
+
+      html += '<div class="eval-print-header"><p class="doctitle">แบบนิเทศการสอน — รายงานสรุปคะแนนเฉลี่ยจากกรรมการ ' + evals.length + ' ท่าน</p></div>';
+      html += '<div class="eval-print-fields">' +
+        '<div class="r"><span>ชื่อผู้รับการนิเทศ &nbsp;<b>' + first['Teacher Name'] + '</b></span>' +
+        '<span>ตำแหน่ง &nbsp;<b>' + (first.Position || '-') + '</b></span></div>' +
+        '<div class="r"><span>รหัสวิชา &nbsp;<b>' + (first['Subject Code'] || '-') + '</b></span>' +
+        '<span>ชื่อวิชา &nbsp;<b>' + (first['Subject Name'] || '-') + '</b></span>' +
+        '<span>ระดับชั้น &nbsp;<b>' + (first['Class Level'] || '-') + '</b></span>' +
+        '<span>จำนวนนักเรียน &nbsp;<b>' + (first['Student Count'] || '-') + '</b> คน</span></div>' +
+        '<div class="r"><span>วันที่สอน &nbsp;<b>' + fmtDate(first['Supervision Date']) + '</b></span>' +
+        '<span>เวลา &nbsp;<b>' + (first.Time || '-') + '</b></span></div>' +
+        '<div class="r"><span>กรรมการผู้ประเมิน &nbsp;<b>' + evals.map(function (e) { return e.Evaluator; }).join(', ') + '</b></span></div>' +
+        '</div>';
+
+      var sectionAvgTotals = { s1: 0, s2: 0, s3: 0 };
+      criteria.forEach(function (section, sIdx) {
+        var evaluatorHeaders = evals.map(function (e) { return '<th>' + (e.Evaluator || ('กก.' + (evals.indexOf(e) + 1))) + '</th>'; }).join('');
+        html += '<table class="eval-score-table"><thead><tr><th>' + (sIdx + 1) + ') ' + section.title + '</th>' +
+          evaluatorHeaders + '<th>เฉลี่ย</th></tr></thead><tbody>';
+        var sectionSum = 0;
+        section.items.forEach(function (item, iIdx) {
+          var vals = scoresList.map(function (s) { return (s[section.key] && s[section.key][iIdx] !== undefined) ? Number(s[section.key][iIdx]) : 0; });
+          var avg = Math.round((vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 10) / 10;
+          sectionSum += avg;
+          html += '<tr><td>' + (sIdx + 1) + '.' + (iIdx + 1) + ') ' + item + '</td>' +
+            vals.map(function (v) { return '<td>' + v + '</td>'; }).join('') +
+            '<td style="font-weight:700;">' + avg + '</td></tr>';
+        });
+        sectionSum = Math.round(sectionSum * 10) / 10;
+        sectionAvgTotals[section.key] = sectionSum;
+        html += '<tr class="subtotal"><td colspan="' + (evals.length + 2) + '">รวมคะแนนเฉลี่ยด้านที่ ' + (sIdx + 1) + ' (' + section.max + ' คะแนน) &nbsp; = &nbsp; ' + sectionSum + '</td></tr>';
+        html += '</tbody></table>';
+      });
+
+      var avgTotal = Math.round((sectionAvgTotals.s1 + sectionAvgTotals.s2 + sectionAvgTotals.s3) * 10) / 10;
+      var avgQuality = qualityLevelLabel(avgTotal);
+
+      html += '<p style="font-weight:700;font-size:16px;margin:10px 0;">คะแนนเฉลี่ยรวมทั้ง 3 ด้าน (100 คะแนน) = ' + avgTotal + ' คะแนน &nbsp;·&nbsp; ระดับคุณภาพ: ' + avgQuality + '</p>';
+
+      html += '<table class="quality-band-table"><thead><tr><th>คะแนน</th><th>ระดับคุณภาพ</th></tr></thead><tbody>' +
+        [[90, 100, 'ดีเยี่ยม'], [80, 89, 'ดีมาก'], [70, 79, 'ดี'], [60, 69, 'พอใช้'], [0, 59, 'ปรับปรุง']].map(function (b) {
+          var isCurrent = avgTotal >= b[0] && avgTotal <= b[1];
+          return '<tr class="' + (isCurrent ? 'current' : '') + '"><td>' + (b[0] === 0 ? 'ต่ำกว่า 60' : b[0] + ' - ' + b[1]) + '</td><td>' + b[2] + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+      html += '<p style="font-weight:700;font-size:15px;margin:14px 0 4px;">ข้อเสนอแนะของกรรมการแต่ละท่าน</p>';
+      html += evals.map(function (e) {
+        return '<div class="eval-suggestion-box"><b>' + (e.Evaluator || '-') + ':</b> ' + (e.Suggestions || '-') + '</div>';
+      }).join('');
+
+      var evalIds = evals.map(function (e) { return e.ID; });
+      apiGet('getFiles').then(function (files) {
+        var photos = (files || []).filter(function (f) {
+          return f['File Type'] === 'ภาพกิจกรรม' && f['Drive File ID'] &&
+            evalIds.some(function (id) { return f.Note === 'EVAL:' + id; });
+        });
+        if (photos.length) {
+          html += '<p style="font-weight:700;font-size:15px;margin:14px 0 4px;">ภาพถ่ายการนิเทศ</p><div class="report-photos">';
+          html += photos.map(function (p) {
+            var src = 'https://drive.google.com/thumbnail?id=' + p['Drive File ID'] + '&sz=w600';
+            return '<figure><img src="' + src + '" alt="ภาพการนิเทศ"></figure>';
+          }).join('');
+          html += '</div>';
+        }
+        html += signatureBlockMulti_(evals);
+        document.getElementById('evalDetailBox').innerHTML = html;
+        setTimeout(function () { window.print(); }, 200);
+      }).catch(function () {
+        html += signatureBlockMulti_(evals);
+        document.getElementById('evalDetailBox').innerHTML = html;
+        setTimeout(function () { window.print(); }, 200);
+      });
+    }).catch(function (err) { alert('โหลดข้อมูลไม่สำเร็จ: ' + err.message); });
+  }
+
+  function signatureBlockMulti_(evals) {
+    var cols = evals.length || 1;
+    var items = evals.map(function (e) {
+      return '<div><div class="line"></div>(' + (e.Evaluator || '............................') + ')<div class="role">กรรมการผู้ประเมิน</div></div>';
+    }).join('');
+    return '<div class="signature-block" style="grid-template-columns:repeat(' + cols + ',1fr);">' + items + '</div>';
   }
 
   // ============ ADMIN ============
