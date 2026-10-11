@@ -29,7 +29,7 @@
     color: var(--text);
     margin: 0;
     padding: 0;
-    font-size: 19px;
+    font-size: 21px;
   }
   #app { min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -44,12 +44,12 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  .topbar h1 { font-size: 20px; margin: 0; font-weight: 700; }
-  .topbar .sub { font-size: 14px; opacity: 0.85; }
-  .userbox { font-size: 15px; display: flex; align-items: center; gap: 10px; }
+  .topbar h1 { font-size: 22px; margin: 0; font-weight: 700; }
+  .topbar .sub { font-size: 16px; opacity: 0.85; }
+  .userbox { font-size: 17px; display: flex; align-items: center; gap: 10px; }
   .btn-logout {
     background: rgba(255,255,255,0.18); border: none; color: #fff;
-    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 15px;
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 17px;
   }
 
   /* Nav */
@@ -59,7 +59,7 @@
   }
   .nav button {
     background: none; border: none; padding: 10px 16px; cursor: pointer;
-    font-size: 16px; color: var(--muted); border-bottom: 3px solid transparent;
+    font-size: 18px; color: var(--muted); border-bottom: 3px solid transparent;
     white-space: nowrap; font-family: inherit;
   }
   .nav button.active { color: var(--primary-dark); border-bottom-color: var(--primary); font-weight: 700; }
@@ -81,14 +81,14 @@
   @media (max-width: 800px) { .grid-4 { grid-template-columns: repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} }
 
   .stat-card { text-align: center; padding: 16px; }
-  .stat-card .num { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
-  .stat-card .label { font-size: 15px; color: var(--muted); margin-top: 4px; }
+  .stat-card .num { font-size: 34px; font-weight: 800; color: var(--primary-dark); }
+  .stat-card .label { font-size: 17px; color: var(--muted); margin-top: 4px; }
 
   /* Forms */
-  label { display: block; font-size: 15px; color: var(--muted); margin: 10px 0 4px; }
+  label { display: block; font-size: 17px; color: var(--muted); margin: 10px 0 4px; }
   input, select, textarea {
     width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 16px; font-family: inherit; background: #fcfcfc;
+    font-size: 18px; font-family: inherit; background: #fcfcfc;
   }
   textarea { resize: vertical; min-height: 70px; }
   .row { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -96,23 +96,23 @@
 
   .btn {
     display: inline-block; background: var(--primary); color: #fff; border: none;
-    padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;
+    padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: 600;
     font-family: inherit; margin-top: 14px;
   }
   .btn:hover { background: var(--primary-dark); }
   .btn.secondary { background: #eceff1; color: var(--text); }
   .btn.danger { background: var(--danger); }
   .btn.warn { background: var(--accent); }
-  .btn.small { padding: 6px 12px; font-size: 14px; margin-top: 0; }
+  .btn.small { padding: 6px 12px; font-size: 16px; margin-top: 0; }
 
   /* Tables */
-  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; font-size: 17px; }
   th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
   th { color: var(--muted); font-weight: 600; background: #fafafa; }
   tr:hover td { background: #f9fbf9; }
 
   .badge {
-    display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 14px; font-weight: 600;
+    display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 16px; font-weight: 600;
   }
   .badge.pending { background: #fff3e0; color: #ef6c00; }
   .badge.confirmed { background: #e3f2fd; color: #1565c0; }
@@ -137,16 +137,16 @@
     padding: 28px 26px; border-radius: 18px; width: 100%; max-width: 360px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.25); text-align: center;
   }
-  .login-card h1 { font-size: 20px; color: var(--primary-dark); margin-bottom: 2px; }
-  .login-card .sub { color: var(--muted); font-size: 15px; margin-bottom: 20px; }
+  .login-card h1 { font-size: 22px; color: var(--primary-dark); margin-bottom: 2px; }
+  .login-card .sub { color: var(--muted); font-size: 17px; margin-bottom: 20px; }
   .role-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
   .role-tabs button {
     flex: 1; padding: 9px; border-radius: 8px; border: 1px solid var(--border);
-    background: #fafafa; cursor: pointer; font-family: inherit; font-size: 15px;
+    background: #fafafa; cursor: pointer; font-family: inherit; font-size: 17px;
   }
   .role-tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-  .msg { padding: 10px 14px; border-radius: 8px; font-size: 15px; margin: 10px 0; }
+  .msg { padding: 10px 14px; border-radius: 8px; font-size: 17px; margin: 10px 0; }
   .msg.success { background: #e8f5e9; color: #2e7d32; }
   .msg.error { background: #ffebee; color: #c62828; }
 
@@ -159,13 +159,13 @@
   .file-type-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .file-type-tabs button {
     padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border); background: #fafafa;
-    cursor: pointer; font-family: inherit; font-size: 15px;
+    cursor: pointer; font-family: inherit; font-size: 17px;
   }
   .file-type-tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-  #calendarBox { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; font-size: 14px; }
+  #calendarBox { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; font-size: 16px; }
   .cal-day { background: #fafafa; border-radius: 6px; padding: 6px 4px; min-height: 44px; border: 1px solid var(--border); }
-  .cal-day .d { font-weight: 700; color: var(--muted); font-size: 13px; }
+  .cal-day .d { font-weight: 700; color: var(--muted); font-size: 15px; }
   .cal-day .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; margin-top: 3px; }
 
   .print-only { display: none; }
@@ -176,15 +176,15 @@
   .report-letterhead .emblem {
     width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--primary-dark);
     display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;
-    font-size: 24px; color: var(--primary-dark);
+    font-size: 26px; color: var(--primary-dark);
   }
-  .report-letterhead .school { font-size: 18px; font-weight: 700; margin: 2px 0; }
-  .report-letterhead .office { font-size: 15px; color: var(--muted); margin: 0; }
-  .report-letterhead .title { font-size: 17px; font-weight: 700; margin: 10px 0 2px; }
-  .report-letterhead .meta { font-size: 15px; color: var(--muted); margin: 0; }
+  .report-letterhead .school { font-size: 20px; font-weight: 700; margin: 2px 0; }
+  .report-letterhead .office { font-size: 17px; color: var(--muted); margin: 0; }
+  .report-letterhead .title { font-size: 19px; font-weight: 700; margin: 10px 0 2px; }
+  .report-letterhead .meta { font-size: 17px; color: var(--muted); margin: 0; }
 
   .signature-block {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; font-size: 15px; text-align: center;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; font-size: 17px; text-align: center;
   }
   .signature-block .line { border-top: 1px dotted #444; margin: 46px auto 6px; width: 85%; }
   .signature-block .role { color: var(--muted); }
@@ -194,19 +194,19 @@
 
   .session-progress {
     background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 10px 14px;
-    font-size: 15px; margin: 10px 0; color: #1565c0;
+    font-size: 17px; margin: 10px 0; color: #1565c0;
   }
   .session-progress b { color: #0d47a1; }
   .evaluator-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
   .evaluator-badge {
-    background: #fff; border: 1px solid #90caf9; border-radius: 20px; padding: 3px 12px; font-size: 13px; color: #1565c0;
+    background: #fff; border: 1px solid #90caf9; border-radius: 20px; padding: 3px 12px; font-size: 15px; color: #1565c0;
   }
   .evaluator-badge.pending { border-style: dashed; color: var(--muted); border-color: var(--border); }
   .session-card { border-left: 4px solid var(--primary); }
-  .session-card .sess-title { font-size: 17px; font-weight: 700; margin: 0 0 4px; }
-  .session-card .sess-meta { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+  .session-card .sess-title { font-size: 19px; font-weight: 700; margin: 0 0 4px; }
+  .session-card .sess-meta { font-size: 16px; color: var(--muted); margin-bottom: 8px; }
   .avg-score-box { text-align: center; }
-  .avg-score-box .num { font-size: 26px; font-weight: 800; color: var(--primary-dark); }
+  .avg-score-box .num { font-size: 28px; font-weight: 800; color: var(--primary-dark); }
 
   .report-photos {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; page-break-inside: avoid;
@@ -215,38 +215,38 @@
   .report-photos img {
     width: 100%; height: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); display: block;
   }
-  .report-photos figcaption { font-size: 13px; color: var(--muted); text-align: center; margin-top: 3px; }
+  .report-photos figcaption { font-size: 15px; color: var(--muted); text-align: center; margin-top: 3px; }
 
   .criteria-section { margin-top: 10px; }
-  .criteria-section h4 { font-size: 16px; margin: 14px 0 8px; color: var(--primary-dark); }
+  .criteria-section h4 { font-size: 18px; margin: 14px 0 8px; color: var(--primary-dark); }
   .criteria-item {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 15px;
+    padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 17px;
   }
   .criteria-item .txt { flex: 1; }
   .score-radios { display: flex; gap: 6px; }
   .score-radios label {
     display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;
-    border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 15px; margin: 0;
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 17px; margin: 0;
     color: var(--muted);
   }
   .score-radios input { display: none; }
   .score-radios label.active-score { background: var(--primary); border-color: var(--primary); color: #fff; }
 
   .eval-print-header { text-align: center; margin-bottom: 12px; }
-  .eval-print-header .doctitle { font-size: 17px; font-weight: 700; margin: 0 0 2px; }
-  .eval-print-fields { font-size: 15px; margin-bottom: 10px; line-height: 1.8; }
+  .eval-print-header .doctitle { font-size: 19px; font-weight: 700; margin: 0 0 2px; }
+  .eval-print-fields { font-size: 17px; margin-bottom: 10px; line-height: 1.8; }
   .eval-print-fields .r { display: flex; flex-wrap: wrap; gap: 4px 18px; }
-  .eval-score-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 10px; }
+  .eval-score-table { width: 100%; border-collapse: collapse; font-size: 16px; margin-bottom: 10px; }
   .eval-score-table th, .eval-score-table td { border: 1px solid #999; padding: 5px 6px; text-align: center; }
   .eval-score-table th:first-child, .eval-score-table td:first-child { text-align: left; }
   .eval-score-table td.sel { background: #e8f5e9; font-weight: 700; }
   .eval-score-table tr.subtotal td { background: #f5f5f5; font-weight: 700; text-align: right; }
   .eval-score-table tr.subtotal td:first-child { text-align: right; }
-  .quality-band-table { width: 60%; border-collapse: collapse; font-size: 14px; margin: 10px 0 14px; }
+  .quality-band-table { width: 60%; border-collapse: collapse; font-size: 16px; margin: 10px 0 14px; }
   .quality-band-table th, .quality-band-table td { border: 1px solid #999; padding: 4px 8px; text-align: center; }
   .quality-band-table tr.current td { background: #fff3e0; font-weight: 700; }
-  .eval-suggestion-box { border: 1px solid #999; border-radius: 4px; padding: 10px; font-size: 15px; min-height: 50px; margin-bottom: 6px; }
+  .eval-suggestion-box { border: 1px solid #999; border-radius: 4px; padding: 10px; font-size: 17px; min-height: 50px; margin-bottom: 6px; }
 
   .photo-thumb { position: relative; width: 84px; height: 84px; }
   .photo-thumb img {
@@ -254,13 +254,26 @@
   }
   .photo-thumb .rm {
     position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%;
-    background: var(--danger); color: #fff; border: none; font-size: 12px; cursor: pointer; line-height: 1;
+    background: var(--danger); color: #fff; border: none; font-size: 14px; cursor: pointer; line-height: 1;
   }
 
   @media print {
     .nav, .topbar, .btn, .no-print { display: none !important; }
     .print-only { display: block; }
-    body { background: #fff; }
+    body { background: #fff; font-size: 16px; }
+    .report-letterhead .school { font-size: 16px !important; }
+    .report-letterhead .office { font-size: 13px !important; }
+    .report-letterhead .title { font-size: 15px !important; }
+    .report-letterhead .meta { font-size: 13px !important; }
+    .signature-block { font-size: 13px !important; }
+    .eval-print-header .doctitle { font-size: 15px !important; }
+    .eval-print-fields { font-size: 13px !important; }
+    .eval-score-table, .quality-band-table { font-size: 12px !important; }
+    .eval-suggestion-box { font-size: 13px !important; }
+    .report-photos figcaption { font-size: 11px !important; }
+    #evalDetailBox table, #reportBox table { font-size: 12px !important; }
+    #evalDetailBox [style*="font-size:16px"], #reportBox [style*="font-size:16px"] { font-size: 14px !important; }
+    #evalDetailBox [style*="font-size:15px"], #reportBox [style*="font-size:15px"] { font-size: 13px !important; }
     @page { margin: 1.5cm; }
   }
 </style>
